@@ -14,6 +14,7 @@ import TextInput from '../../components/TextInput';
 import dateTimeUtils from '../../utils/DateTimeUtils';
 import { localeString } from '../../utils/LocaleUtils';
 import { themeColor } from '../../utils/ThemeUtils';
+import Invoice from '../../models/Invoice';
 
 const JsonToCsv = ({ filteredActivity, isVisible, closeModal }) => {
     const [customFileName, setCustomFileName] = useState('');
@@ -39,11 +40,29 @@ const JsonToCsv = ({ filteredActivity, isVisible, closeModal }) => {
         return data.map((item) => {
             let filteredItem = {};
             keys.forEach((key) => {
-                if (item.hasOwnProperty(key)) {
+                if (item instanceof Invoice) {
+                    switch (key) {
+                        case 'amt_paid':
+                            filteredItem[key] = item.getAmount;
+                            break;
+                        case 'amt_paid_sat':
+                            filteredItem[key] = item.getAmount;
+                            break;
+                        case 'cltv_expiry':
+                            filteredItem[key] = item.originalTimeUntilExpiryInSeconds;
+                            break;
+                        case 'creation_date':
+                            filteredItem[key] = item.formattedCreationDate;
+                            break;
+                        case 'expiry':
+                            filteredItem[key] = item.formattedTimeUntilExpiry;
+                            break;
+                        default:
+                            filteredItem[key] = item[key];
+                    }
+                } else {
                     if (key === 'creation_date') {
-                        filteredItem[key] = dateTimeUtils.listFormattedDate(
-                            item[key]
-                        );
+                        filteredItem[key] = dateTimeUtils.listFormattedDate(item[key]);
                     } else {
                         filteredItem[key] = item[key];
                     }
@@ -84,8 +103,7 @@ const JsonToCsv = ({ filteredActivity, isVisible, closeModal }) => {
                 PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
                 {
                     title: 'Storage Permission Required',
-                    message:
-                        'This app needs access to your storage to save CSV files',
+                    message: 'This app needs access to your storage to save CSV files',
                     buttonNeutral: 'Ask Me Later',
                     buttonNegative: 'Cancel',
                     buttonPositive: 'OK'
